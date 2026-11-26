@@ -8,6 +8,8 @@ exiftool := require("exiftool")
 uv := require("uv")
 yq := require("yq")
 publiciser := require("assembly-publicizer")
+dotnet := require("dotnet")
+env := require("env")
 
 [private]
 default:
@@ -22,7 +24,7 @@ _raw_dependencies assembly_path:
 # Find the assembly versions used by the game and output them as an XML element
 # of 'dependencies' for the `.nuspec`.
 dependencies assembly_path:
-    #!/usr/bin/env -S {{uv}} run --script
+    #!{{env}} -S {{uv}} run --script
     # /// script
     # requires-python = ">=3.11"
     # dependencies = ["rdflib"]
@@ -87,11 +89,13 @@ cleanup:
     exit 0
 
 build version game_directory: cleanup
+    # Debugging.
     set -euxo
+
     # Copy assemblies.
     cp "{{game_directory}}/Goblin Cleanup_Data/Managed" libs -r
     # Inject version and dependencies.
-    yq ea -p xml -o xml \
+    {{yq}} ea -p xml -o xml \
         -P '(. as $item ireduce ({}; . * $item )) | .package.metadata += {"version": "{{version}}"}' \
         GoblinCleanup.GameLibs.nuspec.in <({{just}} dependencies libs) > GoblinCleanup.GameLibs.nuspec
     # Publicise the game assembly.
@@ -99,4 +103,4 @@ build version game_directory: cleanup
     {{publiciser}} Assembly-CSharp.dll --strip -o GoblinCleanup.GameLibs.dll
     popd
     # Pack NuGet package.
-    dotnet pack GoblinCleanup.GameLibs.nuspec
+    {{dotnet}} pack GoblinCleanup.GameLibs.nuspec
