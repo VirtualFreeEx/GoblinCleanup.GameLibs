@@ -9,6 +9,8 @@ uv := require("uv")
 yq := require("yq")
 publiciser := require("assembly-publicizer")
 dotnet := require("dotnet")
+grep := require("grep")
+xargs := require("xargs")
 env := require("env")
 
 [private]
@@ -55,6 +57,7 @@ dependencies assembly_path:
     metadata = final.createElement("metadata")
     dependencies = final.createElement("dependencies")
     frameworkAssemblies = final.createElement("frameworkAssemblies")
+    files = final.createElement("files")
     for subject in set(raw.subjects()):
         name = splitext(basename(subject))[0]
         if name in IGNORED or name.startswith("Unity"): continue # Skip.
@@ -66,13 +69,20 @@ dependencies assembly_path:
         else:
             assembly = raw.value(subject, URIRef("http://ns.exiftool.org/EXE/EXE/1.0/AssemblyVersion"), any=False)
             product = raw.value(subject, URIRef("http://ns.exiftool.org/EXE/EXE/1.0/ProductVersion"), any=False)
-            dependency = final.createElement("dependency")
-            dependency.setAttribute("id", basename(name))
-            dependency.setAttribute("version", product)
-            dependencies.appendChild(dependency)
+            if assembly.startswith("0") or product.startswith("0"):
+                file = final.createElement("file")
+                file.setAttribute("src", f"libs/3rdparty/{subject}")
+                file.setAttribute("target", "lib")
+                files.appendChild(file)
+            else:
+                dependency = final.createElement("dependency")
+                dependency.setAttribute("id", basename(name))
+                dependency.setAttribute("version", product)
+                dependencies.appendChild(dependency)
     metadata.appendChild(dependencies)
     metadata.appendChild(frameworkAssemblies)
     package.appendChild(metadata)
+    package.appendChild(files)
     final.appendChild(package)
     print(final.toprettyxml())
 
@@ -96,11 +106,31 @@ build version game_directory: cleanup
     cp "{{game_directory}}/Goblin Cleanup_Data/Managed" libs -r
     # Inject version and dependencies.
     {{yq}} ea -p xml -o xml \
-        -P '(. as $item ireduce ({}; . * $item )) | .package.metadata += {"version": "{{version}}"}' \
+        -P '.package.metadata.dependencies |= [] + .
+        | .package.metadata.frameworkAssemblies |= [] + .
+        | (. as $item ireduce ({}; . *+ $item ))
+        | .package.metadata += {"version": "{{version}}"}' \
         GoblinCleanup.GameLibs.nuspec.in <({{just}} dependencies libs) > GoblinCleanup.GameLibs.nuspec
     # Publicise the game assembly.
     pushd libs
     {{publiciser}} Assembly-CSharp.dll --strip -o GoblinCleanup.GameLibs.dll
+    # Publicise other assemblies.
+    mkdir 3rdparty && pushd 3rdparty
+    cp ../*.dll .
+    rm Assembly-CSharp.dll \
+        Assembly-CSharp-firstpass.dll \
+        GoblinCleanup.GameLibs.dll \
+        System.dll \
+        System.*.dll \
+        Unity*.dll \
+        mscorlib.dll
+    cat ../../GoblinCleanup.GameLibs.nuspec \
+        | {{grep}} 'dependency' \
+        | {{grep}} 'id="[0-9a-zA-Z.]*"' -o \
+        | {{grep}} -o '".*"' \
+        | {{xargs}} -i sh -c 'rm "{}.dll" | true'
+    {{publiciser}} -f .
     popd
     # Pack NuGet package.
+    popd
     {{dotnet}} pack GoblinCleanup.GameLibs.nuspec
