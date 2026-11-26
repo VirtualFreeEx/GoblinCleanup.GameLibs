@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <title>The Goblin Cleanup game assembly (publicised and stripped.)</title>
+    <id>GoblinCleanup.GameLibs</id>
+    <description>
+      Goblin Cleanup game assembly, publicised and stripped.
+      Versioning follows the form of PATCH+MANIFEST, where depot is
+      the main depot of the game, being `2748341`, manifest is the
+      version of the depot from which the assembly has been pulled from
+      and the patch is the official number of the revision given by the
+      game studio.
+    </description>
+    <authors>
+      Team17
+    </authors>
+    <developmentDependency>true</developmentDependency>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <dependencies>
+      <dependency id="UnityEngine.Modules" version="2023.2.22"></dependency>
+    </dependencies>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="mscorlib"/> 
+    </frameworkAssemblies>
+    <repository type="git" url="https://github.com/VirtualFreeEx/GoblinCleanup.GameLibs.git" />
+    <readme>docs/README.md</readme>
+  </metadata>
+  <files>
+    <file src="libs/GoblinCleanup.GameLibs.dll" target="lib" />
+    <file src="README.md" target="docs" />
+  </files>
+</package>
