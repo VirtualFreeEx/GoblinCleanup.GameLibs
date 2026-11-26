@@ -18,7 +18,7 @@
     <developmentDependency>true</developmentDependency>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <dependencies>
-      <dependency id="UnityEngine.Modules" version="2023.2.22" />
+      <dependency id="UnityEngine.Modules" version="2023.2.22" exclude="" />
     </dependencies>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="mscorlib"/> 
