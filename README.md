@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: MIT -->
 # Game libraries for Goblin Cleanup.
 
 This repository contains tooling to build a `GoblingCleanup.GameLibs` package
