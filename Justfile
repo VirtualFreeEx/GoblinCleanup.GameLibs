@@ -41,7 +41,8 @@ dependencies assembly_path:
     IGNORED = [
         "mscorlib",
         "Assembly-CSharp",
-        "Assembly-CSharp-firstpass"
+        "Assembly-CSharp-firstpass",
+        "TwitchSDK"
     ]
 
     # Capture and parse RDFXML data.
